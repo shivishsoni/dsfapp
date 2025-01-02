@@ -26,47 +26,72 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
   const [isLoading, setIsLoading] = useState(true);
   const navigate = useNavigate();
 
-  const clearSessionAndRedirect = () => {
-    setSession(null);
-    navigate("/login");
+  const clearSessionAndRedirect = async () => {
+    try {
+      await supabase.auth.clearSession();
+    } catch (error) {
+      console.error("Error clearing session:", error);
+    } finally {
+      setSession(null);
+      navigate("/login");
+    }
   };
 
   const signOut = async () => {
     try {
-      await supabase.auth.signOut();
+      const { error } = await supabase.auth.signOut();
+      if (error) {
+        console.error("Error during sign out:", error);
+      }
     } catch (error) {
-      console.error("Error during sign out:", error);
+      console.error("Exception during sign out:", error);
     } finally {
-      clearSessionAndRedirect();
+      await clearSessionAndRedirect();
     }
   };
 
   useEffect(() => {
     const initSession = async () => {
       try {
-        const { data: { session: initialSession } } = await supabase.auth.getSession();
+        const { data: { session: initialSession }, error: sessionError } = await supabase.auth.getSession();
         
+        if (sessionError) {
+          console.error("Session error:", sessionError);
+          await clearSessionAndRedirect();
+          return;
+        }
+
         if (initialSession) {
           try {
             const { data: { user }, error: userError } = await supabase.auth.getUser();
             
-            if (userError || !user) {
-              console.log("Invalid session detected, clearing...");
-              clearSessionAndRedirect();
+            if (userError) {
+              console.error("User verification error:", userError);
+              await clearSessionAndRedirect();
               return;
             }
-            
+
+            if (!user) {
+              console.log("No user found in session");
+              await clearSessionAndRedirect();
+              return;
+            }
+
             setSession(initialSession);
+            if (window.location.pathname === "/login") {
+              navigate("/");
+            }
           } catch (error) {
-            console.error("Error verifying user:", error);
-            clearSessionAndRedirect();
+            console.error("Error during user verification:", error);
+            await clearSessionAndRedirect();
           }
         } else {
-          clearSessionAndRedirect();
+          console.log("No initial session");
+          await clearSessionAndRedirect();
         }
       } catch (error) {
         console.error("Error during session initialization:", error);
-        clearSessionAndRedirect();
+        await clearSessionAndRedirect();
       } finally {
         setIsLoading(false);
       }
@@ -78,18 +103,18 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
       async (event, currentSession) => {
         console.log("Auth state changed:", event);
         
-        if (event === "SIGNED_OUT") {
-          clearSessionAndRedirect();
+        if (event === "SIGNED_OUT" || event === "USER_DELETED") {
+          await clearSessionAndRedirect();
           return;
         }
-        
+
         if (currentSession) {
           setSession(currentSession);
           if (window.location.pathname === "/login") {
             navigate("/");
           }
         } else {
-          clearSessionAndRedirect();
+          await clearSessionAndRedirect();
         }
         
         setIsLoading(false);

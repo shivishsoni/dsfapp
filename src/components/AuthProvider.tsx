@@ -26,47 +26,47 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
   const [isLoading, setIsLoading] = useState(true);
   const navigate = useNavigate();
 
+  const clearSessionAndRedirect = () => {
+    setSession(null);
+    navigate("/login");
+  };
+
   const signOut = async () => {
     try {
-      const { error } = await supabase.auth.signOut();
-      if (error) throw error;
-      
-      setSession(null);
-      navigate("/login");
+      await supabase.auth.signOut();
     } catch (error) {
-      console.error("Error signing out:", error);
-      // Even if there's an error, we should clear the session and redirect
-      setSession(null);
-      navigate("/login");
+      console.error("Error during sign out:", error);
+    } finally {
+      clearSessionAndRedirect();
     }
   };
 
   useEffect(() => {
-    // Initialize session
     const initSession = async () => {
       try {
-        // First, try to recover the session
         const { data: { session: initialSession } } = await supabase.auth.getSession();
-        console.log("Initial session check:", initialSession ? "Session found" : "No session");
         
         if (initialSession) {
-          // Verify the session is still valid
-          const { data: { user }, error: userError } = await supabase.auth.getUser();
-          
-          if (userError || !user) {
-            console.log("Session invalid, signing out");
-            await signOut();
-            return;
+          try {
+            const { data: { user }, error: userError } = await supabase.auth.getUser();
+            
+            if (userError || !user) {
+              console.log("Invalid session detected, clearing...");
+              clearSessionAndRedirect();
+              return;
+            }
+            
+            setSession(initialSession);
+          } catch (error) {
+            console.error("Error verifying user:", error);
+            clearSessionAndRedirect();
           }
-          
-          setSession(initialSession);
         } else {
-          console.log("No initial session found, redirecting to login");
-          navigate("/login");
+          clearSessionAndRedirect();
         }
       } catch (error) {
         console.error("Error during session initialization:", error);
-        navigate("/login");
+        clearSessionAndRedirect();
       } finally {
         setIsLoading(false);
       }
@@ -74,26 +74,25 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
 
     initSession();
 
-    // Set up auth state listener
     const { data: { subscription } } = supabase.auth.onAuthStateChange(
       async (event, currentSession) => {
         console.log("Auth state changed:", event);
         
+        if (event === "SIGNED_OUT") {
+          clearSessionAndRedirect();
+          return;
+        }
+        
         if (currentSession) {
-          console.log("New session detected");
           setSession(currentSession);
+          if (window.location.pathname === "/login") {
+            navigate("/");
+          }
         } else {
-          console.log("No session in state change");
-          setSession(null);
+          clearSessionAndRedirect();
         }
         
         setIsLoading(false);
-
-        if (event === "SIGNED_OUT") {
-          navigate("/login");
-        } else if (event === "SIGNED_IN" && window.location.pathname === "/login") {
-          navigate("/");
-        }
       }
     );
 

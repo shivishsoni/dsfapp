@@ -1,16 +1,30 @@
 import { BrowserRouter as Router, Routes, Route } from "react-router-dom";
-import Index from "./pages/Index";
-import { LanguageProvider } from "./contexts/LanguageContext";
+import { Toaster } from "@/components/ui/toaster";
+import Index from "@/pages/Index";
+import Login from "@/pages/Login";
+import { AuthProvider } from "@/components/AuthProvider";
+import PasswordProtection from "@/components/PasswordProtection";
+import SimpleProtectedRoute from "@/components/SimpleProtectedRoute";
 
 function App() {
   return (
-    <LanguageProvider>
-      <Router>
+    <Router>
+      <AuthProvider>
         <Routes>
-          <Route path="/" element={<Index />} />
+          <Route path="/password" element={<PasswordProtection />} />
+          <Route path="/login" element={<Login />} />
+          <Route
+            path="/"
+            element={
+              <SimpleProtectedRoute>
+                <Index />
+              </SimpleProtectedRoute>
+            }
+          />
         </Routes>
-      </Router>
-    </LanguageProvider>
+        <Toaster />
+      </AuthProvider>
+    </Router>
   );
 }
 

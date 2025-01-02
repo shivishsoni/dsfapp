@@ -3,6 +3,7 @@ import { ThemeSupa } from "@supabase/auth-ui-shared";
 import { supabase } from "@/integrations/supabase/client";
 import { useEffect } from "react";
 import { useNavigate } from "react-router-dom";
+import Logo from "@/components/Logo";
 
 const Login = () => {
   const navigate = useNavigate();
@@ -20,21 +21,41 @@ const Login = () => {
   }, [navigate]);
 
   return (
-    <div className="min-h-screen flex items-center justify-center bg-background p-4">
+    <div className="min-h-screen flex flex-col items-center justify-center bg-background p-4">
       <div className="w-full max-w-md bg-white rounded-lg shadow-lg p-6">
+        <div className="flex justify-center mb-8">
+          <Logo />
+        </div>
         <h1 className="text-2xl font-bold text-center mb-6">Welcome</h1>
         <Auth
           supabaseClient={supabase}
           appearance={{
             theme: ThemeSupa,
+            variables: {
+              default: {
+                colors: {
+                  brand: '#FF7F7F',
+                  brandAccent: '#FF9999',
+                }
+              }
+            },
             style: {
               button: {
-                background: "hsl(var(--primary))",
-                color: "white",
-                borderRadius: "0.5rem",
+                background: '#FF7F7F',
+                color: 'white',
+                borderRadius: '0.5rem',
               },
               anchor: {
-                color: "hsl(var(--primary))",
+                color: '#FF7F7F',
+              },
+              container: {
+                color: '#2D3436',
+              },
+              label: {
+                color: '#2D3436',
+              },
+              input: {
+                borderRadius: '0.5rem',
               },
             },
           }}

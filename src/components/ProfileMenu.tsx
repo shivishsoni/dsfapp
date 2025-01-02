@@ -1,6 +1,4 @@
 import { Button } from "@/components/ui/button";
-import { supabase } from "@/integrations/supabase/client";
-import { useNavigate } from "react-router-dom";
 import { LogOut, User, Settings } from "lucide-react";
 import {
   DropdownMenu,
@@ -17,23 +15,23 @@ import {
 } from "@/components/ui/dialog";
 import { useToast } from "@/hooks/use-toast";
 import { useLanguage } from "@/contexts/LanguageContext";
+import { useAuth } from "./AuthProvider";
 import ProfileForm from "./ProfileForm";
 
 const ProfileMenu = () => {
-  const navigate = useNavigate();
   const { toast } = useToast();
   const { t } = useLanguage();
+  const { signOut } = useAuth();
 
   const handleLogout = async () => {
-    const { error } = await supabase.auth.signOut();
-    if (error) {
+    try {
+      await signOut();
+    } catch (error) {
       toast({
         title: "Error",
         description: t("error.logout.failed"),
         variant: "destructive",
       });
-    } else {
-      navigate("/login");
     }
   };
 

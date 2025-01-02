@@ -6,9 +6,11 @@ import { useNavigate } from "react-router-dom";
 const AuthContext = createContext<{
   session: Session | null;
   isLoading: boolean;
+  signOut: () => Promise<void>;
 }>({
   session: null,
   isLoading: true,
+  signOut: async () => {},
 });
 
 export const useAuth = () => {
@@ -23,6 +25,18 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
   const [session, setSession] = useState<Session | null>(null);
   const [isLoading, setIsLoading] = useState(true);
   const navigate = useNavigate();
+
+  const signOut = async () => {
+    try {
+      await supabase.auth.signOut();
+      setSession(null);
+      navigate("/login");
+    } catch (error) {
+      console.error("Error signing out:", error);
+      // Force navigation to login even if signOut fails
+      navigate("/login");
+    }
+  };
 
   useEffect(() => {
     // Initialize session
@@ -53,7 +67,7 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
 
         if (event === "SIGNED_OUT") {
           navigate("/login");
-        } else if (event === "SIGNED_IN") {
+        } else if (event === "SIGNED_IN" && window.location.pathname === "/login") {
           navigate("/");
         }
       }
@@ -65,7 +79,7 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
   }, [navigate]);
 
   return (
-    <AuthContext.Provider value={{ session, isLoading }}>
+    <AuthContext.Provider value={{ session, isLoading, signOut }}>
       {children}
     </AuthContext.Provider>
   );

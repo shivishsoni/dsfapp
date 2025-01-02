@@ -1,90 +1,105 @@
-import React, { useState, useRef, useEffect } from "react";
-import ChatMessage from "@/components/ChatMessage";
-import ChatInput from "@/components/ChatInput";
-import EmergencyButton from "@/components/EmergencyButton";
+import { useEffect, useState } from "react";
+import { Calendar } from "@/components/ui/calendar";
+import { Button } from "@/components/ui/button";
 import { useToast } from "@/hooks/use-toast";
+import { supabase } from "@/integrations/supabase/client";
+import { useQuery } from "@tanstack/react-query";
 
-interface Message {
+interface Supplement {
   id: string;
-  text: string;
-  isUser: boolean;
-  timestamp: string;
+  name: string;
+  created_at: string;
 }
 
 const Index = () => {
-  const [messages, setMessages] = useState<Message[]>([
-    {
-      id: "1",
-      text: "Hello! I'm here to help you with health-related questions. How can I assist you today?",
-      isUser: false,
-      timestamp: new Date().toISOString(),
-    },
-  ]);
-  const [isLoading, setIsLoading] = useState(false);
-  const messagesEndRef = useRef<HTMLDivElement>(null);
+  const [date, setDate] = useState<Date | undefined>(new Date());
   const { toast } = useToast();
 
-  const scrollToBottom = () => {
-    messagesEndRef.current?.scrollIntoView({ behavior: "smooth" });
-  };
+  const { data: supplements, isLoading } = useQuery({
+    queryKey: ["supplements"],
+    queryFn: async () => {
+      const { data, error } = await supabase
+        .from("supplements")
+        .select("*")
+        .order("created_at", { ascending: false });
 
-  useEffect(() => {
-    scrollToBottom();
-  }, [messages]);
+      if (error) throw error;
+      return data as Supplement[];
+    },
+  });
 
-  const handleSendMessage = async (text: string) => {
-    const newMessage: Message = {
-      id: Date.now().toString(),
-      text,
-      isUser: true,
-      timestamp: new Date().toISOString(),
-    };
-
-    setMessages((prev) => [...prev, newMessage]);
-    setIsLoading(true);
-
+  const logSupplement = async (supplementId: string) => {
     try {
-      // Simulate AI response - In production, this would call your AI endpoint
-      await new Promise((resolve) => setTimeout(resolve, 1000));
-      
-      const botResponse: Message = {
-        id: (Date.now() + 1).toString(),
-        text: "I understand your concern. While I can provide general information, please remember that I'm an AI assistant and not a medical professional. For specific medical advice, please consult with a healthcare provider.",
-        isUser: false,
-        timestamp: new Date().toISOString(),
-      };
+      const { error } = await supabase.from("supplement_logs").insert({
+        supplement_id: supplementId,
+        taken_date: date?.toISOString().split("T")[0],
+      });
 
-      setMessages((prev) => [...prev, botResponse]);
+      if (error) throw error;
+
+      toast({
+        title: "Success",
+        description: "Supplement logged successfully",
+      });
     } catch (error) {
+      console.error("Error logging supplement:", error);
       toast({
         title: "Error",
-        description: "Failed to send message. Please try again.",
+        description: "Failed to log supplement",
         variant: "destructive",
       });
-    } finally {
-      setIsLoading(false);
     }
   };
 
   return (
-    <div className="min-h-screen bg-background">
-      <EmergencyButton />
-      
-      <div className="chat-container">
-        <div className="chat-messages">
-          {messages.map((message) => (
-            <ChatMessage
-              key={message.id}
-              message={message.text}
-              isUser={message.isUser}
-              timestamp={message.timestamp}
+    <div className="min-h-screen bg-background p-4">
+      <div className="max-w-4xl mx-auto space-y-8">
+        <div className="flex justify-between items-center">
+          <h1 className="text-2xl font-bold">Supplement Tracker</h1>
+        </div>
+
+        <div className="grid md:grid-cols-2 gap-8">
+          <div className="bg-white p-4 rounded-lg shadow">
+            <h2 className="text-lg font-semibold mb-4">Select Date</h2>
+            <Calendar
+              mode="single"
+              selected={date}
+              onSelect={setDate}
+              className="rounded-md border"
             />
-          ))}
-          <div ref={messagesEndRef} />
+          </div>
+
+          <div className="bg-white p-4 rounded-lg shadow">
+            <h2 className="text-lg font-semibold mb-4">Log Supplements</h2>
+            {isLoading ? (
+              <div className="flex justify-center">
+                <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary"></div>
+              </div>
+            ) : supplements?.length === 0 ? (
+              <p className="text-center text-muted-foreground">
+                No supplements found. Add some to get started!
+              </p>
+            ) : (
+              <div className="space-y-4">
+                {supplements?.map((supplement) => (
+                  <div
+                    key={supplement.id}
+                    className="flex items-center justify-between p-3 bg-gray-50 rounded-lg"
+                  >
+                    <span className="font-medium">{supplement.name}</span>
+                    <Button
+                      onClick={() => logSupplement(supplement.id)}
+                      disabled={!date}
+                    >
+                      Log
+                    </Button>
+                  </div>
+                ))}
+              </div>
+            )}
+          </div>
         </div>
       </div>
-
-      <ChatInput onSendMessage={handleSendMessage} isLoading={isLoading} />
     </div>
   );
 };

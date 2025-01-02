@@ -9,6 +9,7 @@ import ChatInput from "@/components/ChatInput";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { useLanguage } from "@/contexts/LanguageContext";
 import { Globe } from "lucide-react";
+import { cn } from "@/lib/utils";
 
 interface Supplement {
   id: string;
@@ -20,16 +21,20 @@ const Index = () => {
   const [date, setDate] = useState<Date | undefined>(new Date());
   const [messages, setMessages] = useState<Array<{ message: string; isUser: boolean }>>([]);
   const [isLoading, setIsLoading] = useState(false);
+  const [loggedSupplements, setLoggedSupplements] = useState<Set<string>>(new Set());
   const { toast } = useToast();
   const { t, language, setLanguage } = useLanguage();
 
-  const { data: supplements, isLoading: supplementsLoading } = useQuery({
-    queryKey: ["supplements"],
+  const { data: supplements, isLoading: supplementsLoading, refetch: refetchSupplements } = useQuery({
+    queryKey: ["supplements", date?.toISOString()],
     queryFn: async () => {
-      const { data: existingSupplements } = await supabase
+      // First get all supplements
+      const { data: existingSupplements, error: supplementsError } = await supabase
         .from("supplements")
         .select("*")
         .order("created_at", { ascending: false });
+
+      if (supplementsError) throw supplementsError;
 
       if (!existingSupplements || existingSupplements.length === 0) {
         const defaultSupplements = [
@@ -51,9 +56,26 @@ const Index = () => {
         return data as Supplement[];
       }
 
+      // Then get logs for the selected date
+      if (date) {
+        const { data: logs } = await supabase
+          .from("supplement_logs")
+          .select("supplement_id")
+          .eq("taken_date", date.toISOString().split("T")[0]);
+
+        if (logs) {
+          setLoggedSupplements(new Set(logs.map(log => log.supplement_id)));
+        }
+      }
+
       return existingSupplements as Supplement[];
     },
   });
+
+  // Refetch supplements when date changes
+  useEffect(() => {
+    refetchSupplements();
+  }, [date, refetchSupplements]);
 
   const logSupplement = async (supplementId: string) => {
     try {
@@ -64,6 +86,9 @@ const Index = () => {
 
       if (error) throw error;
 
+      // Update the local state to show the supplement as logged
+      setLoggedSupplements(prev => new Set([...prev, supplementId]));
+      
       toast({
         title: "Success",
         description: t('success.supplement.logged'),
@@ -179,8 +204,14 @@ const Index = () => {
                         <Button
                           onClick={() => logSupplement(supplement.id)}
                           disabled={!date}
+                          variant={loggedSupplements.has(supplement.id) ? "secondary" : "default"}
+                          className={cn(
+                            loggedSupplements.has(supplement.id) && "bg-green-500 hover:bg-green-600"
+                          )}
                         >
-                          {t('supplements.log.button')}
+                          {loggedSupplements.has(supplement.id) 
+                            ? t('supplements.logged.button') 
+                            : t('supplements.log.button')}
                         </Button>
                       </div>
                     ))}

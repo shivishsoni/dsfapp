@@ -11,9 +11,7 @@ import Logo from "@/components/Logo";
 import SupplementList from "@/components/SupplementList";
 import ChatSection from "@/components/ChatSection";
 import ProfileMenu from "@/components/ProfileMenu";
-import ProfileForm from "@/components/ProfileForm";
 
-// Let's extract the supplement type to a separate types file later
 interface Supplement {
   id: string;
   name: string;
@@ -31,11 +29,9 @@ const Index = () => {
   const { data: supplements, isLoading: supplementsLoading, refetch: refetchSupplements } = useQuery({
     queryKey: ["supplements", date?.toISOString()],
     queryFn: async () => {
-      // First get the current user's profile
       const { data: { user } } = await supabase.auth.getUser();
       if (!user) throw new Error("No user found");
 
-      // Get existing supplements for the user
       const { data: existingSupplements, error: supplementsError } = await supabase
         .from("supplements")
         .select("*")
@@ -50,7 +46,6 @@ const Index = () => {
           { name: language === 'hi' ? "धारा शक्ति शाम" : "Dhara Shakti Evening" }
         ];
 
-        // Insert default supplements with the correct user_id
         for (const supplement of defaultSupplements) {
           await supabase.from("supplements").insert({
             name: supplement.name,
@@ -58,7 +53,6 @@ const Index = () => {
           });
         }
 
-        // Fetch the newly created supplements
         const { data } = await supabase
           .from("supplements")
           .select("*")
@@ -159,10 +153,9 @@ const Index = () => {
         </div>
 
         <Tabs defaultValue="chat" className="w-full">
-          <TabsList className="grid w-full grid-cols-3">
+          <TabsList className="grid w-full grid-cols-2">
             <TabsTrigger value="chat">{t('app.tabs.chat')}</TabsTrigger>
             <TabsTrigger value="supplements">{t('app.tabs.supplements')}</TabsTrigger>
-            <TabsTrigger value="profile">{t('app.tabs.profile')}</TabsTrigger>
           </TabsList>
 
           <TabsContent value="chat" className="space-y-4">
@@ -197,10 +190,6 @@ const Index = () => {
                 />
               </div>
             </div>
-          </TabsContent>
-
-          <TabsContent value="profile">
-            <ProfileForm />
           </TabsContent>
         </Tabs>
       </div>

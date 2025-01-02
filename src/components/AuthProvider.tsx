@@ -33,7 +33,6 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
       navigate("/login");
     } catch (error) {
       console.error("Error signing out:", error);
-      // Force navigation to login even if signOut fails
       navigate("/login");
     }
   };
@@ -43,9 +42,11 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
     const initSession = async () => {
       try {
         const { data: { session: initialSession } } = await supabase.auth.getSession();
+        console.log("Initial session:", initialSession);
         setSession(initialSession);
         
         if (!initialSession) {
+          console.log("No initial session found, redirecting to login");
           navigate("/login");
         }
       } catch (error) {
@@ -61,11 +62,11 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
     // Set up auth state listener
     const { data: { subscription } } = supabase.auth.onAuthStateChange(
       async (event, currentSession) => {
-        console.log("Auth state changed:", event);
+        console.log("Auth state changed:", event, currentSession);
         setSession(currentSession);
         setIsLoading(false);
 
-        if (event === "SIGNED_OUT") {
+        if (event === "SIGNED_OUT" || event === "USER_DELETED") {
           navigate("/login");
         } else if (event === "SIGNED_IN" && window.location.pathname === "/login") {
           navigate("/");

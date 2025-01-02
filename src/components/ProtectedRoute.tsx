@@ -8,6 +8,7 @@ const ProtectedRoute = ({ children }: { children: React.ReactNode }) => {
 
   useEffect(() => {
     if (!isLoading && !session) {
+      console.log("No session found in ProtectedRoute, redirecting to login");
       navigate("/login");
     }
   }, [session, isLoading, navigate]);

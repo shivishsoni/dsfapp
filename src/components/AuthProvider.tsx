@@ -28,11 +28,15 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
 
   const signOut = async () => {
     try {
-      await supabase.auth.signOut();
+      const { error } = await supabase.auth.signOut();
+      if (error) throw error;
+      
       setSession(null);
       navigate("/login");
     } catch (error) {
       console.error("Error signing out:", error);
+      // Even if there's an error, we should clear the session and redirect
+      setSession(null);
       navigate("/login");
     }
   };
@@ -41,16 +45,27 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
     // Initialize session
     const initSession = async () => {
       try {
+        // First, try to recover the session
         const { data: { session: initialSession } } = await supabase.auth.getSession();
-        console.log("Initial session:", initialSession);
-        setSession(initialSession);
+        console.log("Initial session check:", initialSession ? "Session found" : "No session");
         
-        if (!initialSession) {
+        if (initialSession) {
+          // Verify the session is still valid
+          const { data: { user }, error: userError } = await supabase.auth.getUser();
+          
+          if (userError || !user) {
+            console.log("Session invalid, signing out");
+            await signOut();
+            return;
+          }
+          
+          setSession(initialSession);
+        } else {
           console.log("No initial session found, redirecting to login");
           navigate("/login");
         }
       } catch (error) {
-        console.error("Error fetching session:", error);
+        console.error("Error during session initialization:", error);
         navigate("/login");
       } finally {
         setIsLoading(false);
@@ -62,8 +77,16 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
     // Set up auth state listener
     const { data: { subscription } } = supabase.auth.onAuthStateChange(
       async (event, currentSession) => {
-        console.log("Auth state changed:", event, currentSession);
-        setSession(currentSession);
+        console.log("Auth state changed:", event);
+        
+        if (currentSession) {
+          console.log("New session detected");
+          setSession(currentSession);
+        } else {
+          console.log("No session in state change");
+          setSession(null);
+        }
+        
         setIsLoading(false);
 
         if (event === "SIGNED_OUT") {

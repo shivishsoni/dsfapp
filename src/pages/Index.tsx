@@ -28,9 +28,15 @@ const Index = () => {
   const { data: supplements, isLoading: supplementsLoading, refetch: refetchSupplements } = useQuery({
     queryKey: ["supplements", date?.toISOString()],
     queryFn: async () => {
+      // First get the current user's profile
+      const { data: { user } } = await supabase.auth.getUser();
+      if (!user) throw new Error("No user found");
+
+      // Get existing supplements for the user
       const { data: existingSupplements, error: supplementsError } = await supabase
         .from("supplements")
         .select("*")
+        .eq('user_id', user.id)
         .order("created_at", { ascending: false });
 
       if (supplementsError) throw supplementsError;
@@ -41,17 +47,21 @@ const Index = () => {
           { name: language === 'hi' ? "धारा शक्ति शाम" : "Dhara Shakti Evening" }
         ];
 
+        // Insert default supplements with the correct user_id
         for (const supplement of defaultSupplements) {
           await supabase.from("supplements").insert({
             name: supplement.name,
-            user_id: (await supabase.auth.getUser()).data.user?.id
+            user_id: user.id
           });
         }
 
+        // Fetch the newly created supplements
         const { data } = await supabase
           .from("supplements")
           .select("*")
+          .eq('user_id', user.id)
           .order("created_at", { ascending: false });
+          
         return data as Supplement[];
       }
 

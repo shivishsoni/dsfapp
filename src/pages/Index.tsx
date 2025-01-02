@@ -10,6 +10,7 @@ import { Button } from "@/components/ui/button";
 import Logo from "@/components/Logo";
 import SupplementList from "@/components/SupplementList";
 import ChatSection from "@/components/ChatSection";
+import ProfileMenu from "@/components/ProfileMenu";
 
 interface Supplement {
   id: string;
@@ -142,20 +143,24 @@ const Index = () => {
       <div className="max-w-4xl mx-auto space-y-8">
         <div className="flex justify-between items-center">
           <Logo />
-          <Button
-            variant="outline"
-            size="icon"
-            onClick={toggleLanguage}
-            className="rounded-full"
-          >
-            <Globe className="h-4 w-4" />
-          </Button>
+          <div className="flex items-center gap-2">
+            <Button
+              variant="outline"
+              size="icon"
+              onClick={toggleLanguage}
+              className="rounded-full"
+            >
+              <Globe className="h-4 w-4" />
+            </Button>
+            <ProfileMenu />
+          </div>
         </div>
 
         <Tabs defaultValue="chat" className="w-full">
-          <TabsList className="grid w-full grid-cols-2">
+          <TabsList className="grid w-full grid-cols-3">
             <TabsTrigger value="chat">{t('app.tabs.chat')}</TabsTrigger>
             <TabsTrigger value="supplements">{t('app.tabs.supplements')}</TabsTrigger>
+            <TabsTrigger value="profile">{t('app.tabs.profile')}</TabsTrigger>
           </TabsList>
 
           <TabsContent value="chat" className="space-y-4">
@@ -190,6 +195,10 @@ const Index = () => {
                 />
               </div>
             </div>
+          </TabsContent>
+
+          <TabsContent value="profile">
+            <ProfileForm />
           </TabsContent>
         </Tabs>
       </div>

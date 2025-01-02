@@ -13,7 +13,7 @@ serve(async (req) => {
   }
 
   try {
-    const { message } = await req.json();
+    const { message, language = 'en' } = await req.json();
     const openAIApiKey = Deno.env.get('OPENAI_API_KEY');
 
     if (!openAIApiKey) {
@@ -21,6 +21,10 @@ serve(async (req) => {
     }
 
     console.log('Sending request to OpenAI with message:', message);
+
+    const systemPrompt = language === 'hi' 
+      ? 'आप एक सहायक हैं जो भारत में महिलाओं और बच्चों के लिए प्रजनन स्वास्थ्य शिक्षा और मार्गदर्शन पर ध्यान केंद्रित करते हैं। सटीक, सांस्कृतिक रूप से संवेदनशील जानकारी प्रदान करें और पेशेवर चिकित्सा परामर्श की सिफारिश करने के समय को ध्यान में रखें। हमेशा स्पष्ट करें कि आप केवल सूचनात्मक मार्गदर्शन प्रदान करते हैं, चिकित्सा सलाह नहीं।'
+      : 'You are a helpful assistant focused on reproductive health education and guidance for women and children in India. Provide accurate, culturally sensitive information while being mindful of when to recommend professional medical consultation. Always clarify that you provide informational guidance only and not medical advice.';
 
     const response = await fetch('https://api.openai.com/v1/chat/completions', {
       method: 'POST',
@@ -33,7 +37,7 @@ serve(async (req) => {
         messages: [
           {
             role: 'system',
-            content: 'You are a helpful assistant focused on reproductive health education and guidance for women and children in India. Provide accurate, culturally sensitive information while being mindful of when to recommend professional medical consultation. Always clarify that you provide informational guidance only and not medical advice.'
+            content: systemPrompt
           },
           { role: 'user', content: message }
         ],

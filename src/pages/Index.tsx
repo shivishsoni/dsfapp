@@ -7,6 +7,8 @@ import { useQuery } from "@tanstack/react-query";
 import ChatMessage from "@/components/ChatMessage";
 import ChatInput from "@/components/ChatInput";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { useLanguage } from "@/contexts/LanguageContext";
+import { Globe } from "lucide-react";
 
 interface Supplement {
   id: string;
@@ -19,6 +21,7 @@ const Index = () => {
   const [messages, setMessages] = useState<Array<{ message: string; isUser: boolean }>>([]);
   const [isLoading, setIsLoading] = useState(false);
   const { toast } = useToast();
+  const { t, language, setLanguage } = useLanguage();
 
   const { data: supplements, isLoading: supplementsLoading } = useQuery({
     queryKey: ["supplements"],
@@ -29,10 +32,9 @@ const Index = () => {
         .order("created_at", { ascending: false });
 
       if (!existingSupplements || existingSupplements.length === 0) {
-        // Add default supplements if none exist
         const defaultSupplements = [
-          { name: "Dhara Shakti Morning" },
-          { name: "Dhara Shakti Evening" }
+          { name: language === 'hi' ? "धारा शक्ति सुबह" : "Dhara Shakti Morning" },
+          { name: language === 'hi' ? "धारा शक्ति शाम" : "Dhara Shakti Evening" }
         ];
 
         for (const supplement of defaultSupplements) {
@@ -64,13 +66,13 @@ const Index = () => {
 
       toast({
         title: "Success",
-        description: "Supplement logged successfully",
+        description: t('success.supplement.logged'),
       });
     } catch (error) {
       console.error("Error logging supplement:", error);
       toast({
         title: "Error",
-        description: "Failed to log supplement",
+        description: t('error.supplement.failed'),
         variant: "destructive",
       });
     }
@@ -82,7 +84,7 @@ const Index = () => {
       setMessages(prev => [...prev, { message, isUser: true }]);
 
       const response = await supabase.functions.invoke('chat', {
-        body: { message }
+        body: { message, language }
       });
 
       if (response.error) throw response.error;
@@ -92,7 +94,7 @@ const Index = () => {
       console.error('Chat error:', error);
       toast({
         title: "Error",
-        description: "Failed to send message",
+        description: t('error.chat.failed'),
         variant: "destructive",
       });
     } finally {
@@ -100,17 +102,29 @@ const Index = () => {
     }
   };
 
+  const toggleLanguage = () => {
+    setLanguage(language === 'en' ? 'hi' : 'en');
+  };
+
   return (
     <div className="min-h-screen bg-background p-4">
       <div className="max-w-4xl mx-auto space-y-8">
         <div className="flex justify-between items-center">
-          <h1 className="text-2xl font-bold">DSF App</h1>
+          <h1 className="text-2xl font-bold">{t('app.title')}</h1>
+          <Button
+            variant="outline"
+            size="icon"
+            onClick={toggleLanguage}
+            className="rounded-full"
+          >
+            <Globe className="h-4 w-4" />
+          </Button>
         </div>
 
         <Tabs defaultValue="chat" className="w-full">
           <TabsList className="grid w-full grid-cols-2">
-            <TabsTrigger value="chat">Chat Assistant</TabsTrigger>
-            <TabsTrigger value="supplements">Supplement Tracker</TabsTrigger>
+            <TabsTrigger value="chat">{t('app.tabs.chat')}</TabsTrigger>
+            <TabsTrigger value="supplements">{t('app.tabs.supplements')}</TabsTrigger>
           </TabsList>
 
           <TabsContent value="chat" className="space-y-4">
@@ -124,14 +138,18 @@ const Index = () => {
                   />
                 ))}
               </div>
-              <ChatInput onSendMessage={handleSendMessage} isLoading={isLoading} />
+              <ChatInput 
+                onSendMessage={handleSendMessage} 
+                isLoading={isLoading}
+                placeholder={t('chat.input.placeholder')}
+              />
             </div>
           </TabsContent>
 
           <TabsContent value="supplements">
             <div className="grid md:grid-cols-2 gap-8">
               <div className="bg-white p-4 rounded-lg shadow">
-                <h2 className="text-lg font-semibold mb-4">Select Date</h2>
+                <h2 className="text-lg font-semibold mb-4">{t('supplements.date.title')}</h2>
                 <Calendar
                   mode="single"
                   selected={date}
@@ -141,14 +159,14 @@ const Index = () => {
               </div>
 
               <div className="bg-white p-4 rounded-lg shadow">
-                <h2 className="text-lg font-semibold mb-4">Log Supplements</h2>
+                <h2 className="text-lg font-semibold mb-4">{t('supplements.title')}</h2>
                 {supplementsLoading ? (
                   <div className="flex justify-center">
                     <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary"></div>
                   </div>
                 ) : supplements?.length === 0 ? (
                   <p className="text-center text-muted-foreground">
-                    No supplements found. Add some to get started!
+                    {t('supplements.empty')}
                   </p>
                 ) : (
                   <div className="space-y-4">
@@ -162,7 +180,7 @@ const Index = () => {
                           onClick={() => logSupplement(supplement.id)}
                           disabled={!date}
                         >
-                          Log
+                          {t('supplements.log.button')}
                         </Button>
                       </div>
                     ))}

@@ -4,9 +4,10 @@ import { Send } from "lucide-react";
 interface ChatInputProps {
   onSendMessage: (message: string) => void;
   isLoading?: boolean;
+  placeholder?: string;
 }
 
-const ChatInput: React.FC<ChatInputProps> = ({ onSendMessage, isLoading }) => {
+const ChatInput: React.FC<ChatInputProps> = ({ onSendMessage, isLoading, placeholder }) => {
   const [message, setMessage] = useState("");
 
   const handleSubmit = (e: React.FormEvent) => {
@@ -24,7 +25,7 @@ const ChatInput: React.FC<ChatInputProps> = ({ onSendMessage, isLoading }) => {
           type="text"
           value={message}
           onChange={(e) => setMessage(e.target.value)}
-          placeholder="Type your message here..."
+          placeholder={placeholder}
           className="flex-1 px-4 py-3 rounded-lg border border-border bg-white/80 
                      focus:outline-none focus:ring-2 focus:ring-primary/20"
           disabled={isLoading}

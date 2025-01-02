@@ -28,7 +28,7 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
 
   const clearSessionAndRedirect = async () => {
     try {
-      await supabase.auth.clearSession();
+      await supabase.auth.signOut();
     } catch (error) {
       console.error("Error clearing session:", error);
     } finally {
@@ -103,7 +103,7 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
       async (event, currentSession) => {
         console.log("Auth state changed:", event);
         
-        if (event === "SIGNED_OUT" || event === "USER_DELETED") {
+        if (event === "SIGNED_OUT") {
           await clearSessionAndRedirect();
           return;
         }

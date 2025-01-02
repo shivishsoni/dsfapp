@@ -1,15 +1,15 @@
 import { useEffect, useState } from "react";
 import { Calendar } from "@/components/ui/calendar";
-import { Button } from "@/components/ui/button";
 import { useToast } from "@/hooks/use-toast";
 import { supabase } from "@/integrations/supabase/client";
 import { useQuery } from "@tanstack/react-query";
-import ChatMessage from "@/components/ChatMessage";
-import ChatInput from "@/components/ChatInput";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { useLanguage } from "@/contexts/LanguageContext";
 import { Globe } from "lucide-react";
-import { cn } from "@/lib/utils";
+import { Button } from "@/components/ui/button";
+import Logo from "@/components/Logo";
+import SupplementList from "@/components/SupplementList";
+import ChatSection from "@/components/ChatSection";
 
 interface Supplement {
   id: string;
@@ -28,7 +28,6 @@ const Index = () => {
   const { data: supplements, isLoading: supplementsLoading, refetch: refetchSupplements } = useQuery({
     queryKey: ["supplements", date?.toISOString()],
     queryFn: async () => {
-      // First get all supplements
       const { data: existingSupplements, error: supplementsError } = await supabase
         .from("supplements")
         .select("*")
@@ -56,7 +55,6 @@ const Index = () => {
         return data as Supplement[];
       }
 
-      // Then get logs for the selected date
       if (date) {
         const { data: logs } = await supabase
           .from("supplement_logs")
@@ -72,7 +70,6 @@ const Index = () => {
     },
   });
 
-  // Refetch supplements when date changes
   useEffect(() => {
     refetchSupplements();
   }, [date, refetchSupplements]);
@@ -86,7 +83,6 @@ const Index = () => {
 
       if (error) throw error;
 
-      // Update the local state to show the supplement as logged
       setLoggedSupplements(prev => new Set([...prev, supplementId]));
       
       toast({
@@ -135,7 +131,7 @@ const Index = () => {
     <div className="min-h-screen bg-background p-4">
       <div className="max-w-4xl mx-auto space-y-8">
         <div className="flex justify-between items-center">
-          <h1 className="text-2xl font-bold">{t('app.title')}</h1>
+          <Logo />
           <Button
             variant="outline"
             size="icon"
@@ -153,22 +149,12 @@ const Index = () => {
           </TabsList>
 
           <TabsContent value="chat" className="space-y-4">
-            <div className="bg-white rounded-lg shadow p-4 min-h-[500px] flex flex-col">
-              <div className="flex-1 overflow-y-auto space-y-4 mb-4">
-                {messages.map((msg, index) => (
-                  <ChatMessage
-                    key={index}
-                    message={msg.message}
-                    isUser={msg.isUser}
-                  />
-                ))}
-              </div>
-              <ChatInput 
-                onSendMessage={handleSendMessage} 
-                isLoading={isLoading}
-                placeholder={t('chat.input.placeholder')}
-              />
-            </div>
+            <ChatSection 
+              messages={messages}
+              onSendMessage={handleSendMessage}
+              isLoading={isLoading}
+              placeholder={t('chat.input.placeholder')}
+            />
           </TabsContent>
 
           <TabsContent value="supplements">
@@ -185,38 +171,13 @@ const Index = () => {
 
               <div className="bg-white p-4 rounded-lg shadow">
                 <h2 className="text-lg font-semibold mb-4">{t('supplements.title')}</h2>
-                {supplementsLoading ? (
-                  <div className="flex justify-center">
-                    <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary"></div>
-                  </div>
-                ) : supplements?.length === 0 ? (
-                  <p className="text-center text-muted-foreground">
-                    {t('supplements.empty')}
-                  </p>
-                ) : (
-                  <div className="space-y-4">
-                    {supplements?.map((supplement) => (
-                      <div
-                        key={supplement.id}
-                        className="flex items-center justify-between p-3 bg-gray-50 rounded-lg"
-                      >
-                        <span className="font-medium">{supplement.name}</span>
-                        <Button
-                          onClick={() => logSupplement(supplement.id)}
-                          disabled={!date}
-                          variant={loggedSupplements.has(supplement.id) ? "secondary" : "default"}
-                          className={cn(
-                            loggedSupplements.has(supplement.id) && "bg-green-500 hover:bg-green-600"
-                          )}
-                        >
-                          {loggedSupplements.has(supplement.id) 
-                            ? t('supplements.logged.button') 
-                            : t('supplements.log.button')}
-                        </Button>
-                      </div>
-                    ))}
-                  </div>
-                )}
+                <SupplementList 
+                  supplements={supplements}
+                  loggedSupplements={loggedSupplements}
+                  onLogSupplement={logSupplement}
+                  isLoading={supplementsLoading}
+                  date={date}
+                />
               </div>
             </div>
           </TabsContent>

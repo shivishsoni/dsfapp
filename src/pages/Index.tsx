@@ -11,7 +11,9 @@ import Logo from "@/components/Logo";
 import SupplementList from "@/components/SupplementList";
 import ChatSection from "@/components/ChatSection";
 import ProfileMenu from "@/components/ProfileMenu";
+import ProfileForm from "@/components/ProfileForm";
 
+// Let's extract the supplement type to a separate types file later
 interface Supplement {
   id: string;
   name: string;

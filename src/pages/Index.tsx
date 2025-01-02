@@ -23,13 +23,33 @@ const Index = () => {
   const { data: supplements, isLoading: supplementsLoading } = useQuery({
     queryKey: ["supplements"],
     queryFn: async () => {
-      const { data, error } = await supabase
+      const { data: existingSupplements } = await supabase
         .from("supplements")
         .select("*")
         .order("created_at", { ascending: false });
 
-      if (error) throw error;
-      return data as Supplement[];
+      if (!existingSupplements || existingSupplements.length === 0) {
+        // Add default supplements if none exist
+        const defaultSupplements = [
+          { name: "Dhara Shakti Morning" },
+          { name: "Dhara Shakti Evening" }
+        ];
+
+        for (const supplement of defaultSupplements) {
+          await supabase.from("supplements").insert({
+            name: supplement.name,
+            user_id: (await supabase.auth.getUser()).data.user?.id
+          });
+        }
+
+        const { data } = await supabase
+          .from("supplements")
+          .select("*")
+          .order("created_at", { ascending: false });
+        return data as Supplement[];
+      }
+
+      return existingSupplements as Supplement[];
     },
   });
 
@@ -84,7 +104,7 @@ const Index = () => {
     <div className="min-h-screen bg-background p-4">
       <div className="max-w-4xl mx-auto space-y-8">
         <div className="flex justify-between items-center">
-          <h1 className="text-2xl font-bold">Health Assistant</h1>
+          <h1 className="text-2xl font-bold">DSF App</h1>
         </div>
 
         <Tabs defaultValue="chat" className="w-full">

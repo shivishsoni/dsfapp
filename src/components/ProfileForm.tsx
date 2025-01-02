@@ -128,23 +128,9 @@ const ProfileForm = () => {
           name="name"
           render={({ field }) => (
             <FormItem>
-              <FormLabel>{t("profile.name")}</FormLabel>
+              <FormLabel>Full Name</FormLabel>
               <FormControl>
                 <Input {...field} />
-              </FormControl>
-              <FormMessage />
-            </FormItem>
-          )}
-        />
-
-        <FormField
-          control={form.control}
-          name="email"
-          render={({ field }) => (
-            <FormItem>
-              <FormLabel>{t("profile.email")}</FormLabel>
-              <FormControl>
-                <Input {...field} disabled />
               </FormControl>
               <FormMessage />
             </FormItem>
@@ -156,7 +142,7 @@ const ProfileForm = () => {
           name="age"
           render={({ field }) => (
             <FormItem>
-              <FormLabel>{t("profile.age")}</FormLabel>
+              <FormLabel>Age</FormLabel>
               <FormControl>
                 <Input
                   type="number"
@@ -171,10 +157,24 @@ const ProfileForm = () => {
 
         <FormField
           control={form.control}
+          name="email"
+          render={({ field }) => (
+            <FormItem>
+              <FormLabel>Email</FormLabel>
+              <FormControl>
+                <Input {...field} disabled />
+              </FormControl>
+              <FormMessage />
+            </FormItem>
+          )}
+        />
+
+        <FormField
+          control={form.control}
           name="phone_number"
           render={({ field }) => (
             <FormItem>
-              <FormLabel>{t("profile.phone")}</FormLabel>
+              <FormLabel>Phone Number</FormLabel>
               <FormControl>
                 <Input {...field} />
               </FormControl>
@@ -188,7 +188,7 @@ const ProfileForm = () => {
           name="country"
           render={({ field }) => (
             <FormItem>
-              <FormLabel>{t("profile.country")}</FormLabel>
+              <FormLabel>Country</FormLabel>
               <Select onValueChange={field.onChange} defaultValue={field.value}>
                 <FormControl>
                   <SelectTrigger>
@@ -213,7 +213,7 @@ const ProfileForm = () => {
           name="state"
           render={({ field }) => (
             <FormItem>
-              <FormLabel>{t("profile.state")}</FormLabel>
+              <FormLabel>State</FormLabel>
               <Select onValueChange={field.onChange} defaultValue={field.value}>
                 <FormControl>
                   <SelectTrigger>
@@ -238,7 +238,7 @@ const ProfileForm = () => {
           name="city"
           render={({ field }) => (
             <FormItem>
-              <FormLabel>{t("profile.city")}</FormLabel>
+              <FormLabel>City</FormLabel>
               <FormControl>
                 <Input {...field} />
               </FormControl>
@@ -252,7 +252,7 @@ const ProfileForm = () => {
           name="address"
           render={({ field }) => (
             <FormItem>
-              <FormLabel>{t("profile.address")}</FormLabel>
+              <FormLabel>Address</FormLabel>
               <FormControl>
                 <Input {...field} />
               </FormControl>
@@ -262,7 +262,7 @@ const ProfileForm = () => {
         />
 
         <Button type="submit" className="w-full">
-          {t("profile.save")}
+          Save Profile
         </Button>
       </form>
     </Form>

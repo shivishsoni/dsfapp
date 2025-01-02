@@ -49,19 +49,19 @@ const ProfileMenu = () => {
           <DialogTrigger asChild>
             <DropdownMenuItem onSelect={(e) => e.preventDefault()}>
               <Settings className="mr-2 h-4 w-4" />
-              {t("profile.settings")}
+              Profile Settings
             </DropdownMenuItem>
           </DialogTrigger>
           <DialogContent className="max-w-2xl">
             <DialogHeader>
-              <DialogTitle>{t("profile.title")}</DialogTitle>
+              <DialogTitle>Profile Details</DialogTitle>
             </DialogHeader>
             <ProfileForm />
           </DialogContent>
         </Dialog>
         <DropdownMenuItem onClick={handleLogout} className="text-red-600">
           <LogOut className="mr-2 h-4 w-4" />
-          {t("auth.logout")}
+          Logout
         </DropdownMenuItem>
       </DropdownMenuContent>
     </DropdownMenu>

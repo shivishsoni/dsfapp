@@ -66,7 +66,7 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
         setSession(currentSession);
         setIsLoading(false);
 
-        if (event === "SIGNED_OUT" || event === "USER_DELETED") {
+        if (event === "SIGNED_OUT") {
           navigate("/login");
         } else if (event === "SIGNED_IN" && window.location.pathname === "/login") {
           navigate("/");

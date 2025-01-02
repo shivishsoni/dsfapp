@@ -27,25 +27,16 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
   const navigate = useNavigate();
 
   const clearSessionAndRedirect = async () => {
-    try {
-      await supabase.auth.signOut();
-    } catch (error) {
-      console.error("Error clearing session:", error);
-    } finally {
-      setSession(null);
-      navigate("/login");
-    }
+    setSession(null);
+    navigate("/login");
   };
 
   const signOut = async () => {
     try {
-      const { error } = await supabase.auth.signOut();
-      if (error) {
-        console.error("Error during sign out:", error);
-      }
+      await supabase.auth.signOut();
+      await clearSessionAndRedirect();
     } catch (error) {
-      console.error("Exception during sign out:", error);
-    } finally {
+      console.error("Error during sign out:", error);
       await clearSessionAndRedirect();
     }
   };
@@ -53,40 +44,14 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
   useEffect(() => {
     const initSession = async () => {
       try {
-        const { data: { session: initialSession }, error: sessionError } = await supabase.auth.getSession();
+        const { data: { session: initialSession } } = await supabase.auth.getSession();
         
-        if (sessionError) {
-          console.error("Session error:", sessionError);
-          await clearSessionAndRedirect();
-          return;
-        }
-
         if (initialSession) {
-          try {
-            const { data: { user }, error: userError } = await supabase.auth.getUser();
-            
-            if (userError) {
-              console.error("User verification error:", userError);
-              await clearSessionAndRedirect();
-              return;
-            }
-
-            if (!user) {
-              console.log("No user found in session");
-              await clearSessionAndRedirect();
-              return;
-            }
-
-            setSession(initialSession);
-            if (window.location.pathname === "/login") {
-              navigate("/");
-            }
-          } catch (error) {
-            console.error("Error during user verification:", error);
-            await clearSessionAndRedirect();
+          setSession(initialSession);
+          if (window.location.pathname === "/login") {
+            navigate("/");
           }
         } else {
-          console.log("No initial session");
           await clearSessionAndRedirect();
         }
       } catch (error) {

@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useRef, useEffect } from 'react';
 import ChatMessage from "@/components/ChatMessage";
 import ChatInput from "@/components/ChatInput";
 
@@ -10,9 +10,19 @@ interface ChatSectionProps {
 }
 
 const ChatSection = ({ messages, onSendMessage, isLoading, placeholder }: ChatSectionProps) => {
+  const messagesEndRef = useRef<HTMLDivElement>(null);
+
+  const scrollToBottom = () => {
+    messagesEndRef.current?.scrollIntoView({ behavior: "smooth" });
+  };
+
+  useEffect(() => {
+    scrollToBottom();
+  }, [messages]);
+
   return (
-    <div className="bg-white rounded-lg shadow p-4 min-h-[500px] flex flex-col">
-      <div className="flex-1 overflow-y-auto space-y-4 mb-4">
+    <div className="bg-white rounded-lg shadow-lg p-4 min-h-[500px] flex flex-col">
+      <div className="flex-1 overflow-y-auto space-y-6 mb-4 p-2">
         {messages.map((msg, index) => (
           <ChatMessage
             key={index}
@@ -20,6 +30,7 @@ const ChatSection = ({ messages, onSendMessage, isLoading, placeholder }: ChatSe
             isUser={msg.isUser}
           />
         ))}
+        <div ref={messagesEndRef} />
       </div>
       <ChatInput 
         onSendMessage={onSendMessage} 

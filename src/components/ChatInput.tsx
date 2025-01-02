@@ -1,5 +1,6 @@
 import React, { useState } from "react";
 import { Send } from "lucide-react";
+import { Button } from "@/components/ui/button";
 
 interface ChatInputProps {
   onSendMessage: (message: string) => void;
@@ -19,24 +20,24 @@ const ChatInput: React.FC<ChatInputProps> = ({ onSendMessage, isLoading, placeho
   };
 
   return (
-    <form onSubmit={handleSubmit} className="input-container">
-      <div className="max-w-2xl mx-auto flex gap-2">
+    <form onSubmit={handleSubmit} className="relative">
+      <div className="flex gap-2">
         <input
           type="text"
           value={message}
           onChange={(e) => setMessage(e.target.value)}
-          placeholder={placeholder}
+          placeholder={placeholder || "Type your message..."}
           className="flex-1 px-4 py-3 rounded-lg border border-border bg-white/80 
-                     focus:outline-none focus:ring-2 focus:ring-primary/20"
+                   focus:outline-none focus:ring-2 focus:ring-primary/20"
           disabled={isLoading}
         />
-        <button
+        <Button
           type="submit"
           disabled={!message.trim() || isLoading}
-          className="primary-button px-4"
+          className="px-4 bg-primary hover:bg-primary-hover text-white"
         >
           <Send className="w-5 h-5" />
-        </button>
+        </Button>
       </div>
     </form>
   );

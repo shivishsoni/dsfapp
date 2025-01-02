@@ -3,8 +3,7 @@ import { Toaster } from "@/components/ui/toaster";
 import Index from "@/pages/Index";
 import Login from "@/pages/Login";
 import { AuthProvider } from "@/components/AuthProvider";
-import PasswordProtection from "@/components/PasswordProtection";
-import SimpleProtectedRoute from "@/components/SimpleProtectedRoute";
+import ProtectedRoute from "@/components/ProtectedRoute";
 import { LanguageProvider } from "@/contexts/LanguageContext";
 
 function App() {
@@ -13,14 +12,13 @@ function App() {
       <LanguageProvider>
         <AuthProvider>
           <Routes>
-            <Route path="/password" element={<PasswordProtection />} />
             <Route path="/login" element={<Login />} />
             <Route
               path="/"
               element={
-                <SimpleProtectedRoute>
+                <ProtectedRoute>
                   <Index />
-                </SimpleProtectedRoute>
+                </ProtectedRoute>
               }
             />
           </Routes>
